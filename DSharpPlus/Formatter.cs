@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -196,6 +196,14 @@ namespace DSharpPlus
         /// <returns>Formatted mention.</returns>
         public static string Mention(DiscordRole role)
             => $"<@&{role.Id.ToString(CultureInfo.InvariantCulture)}>";
+
+        /// <summary>
+        /// Creates a mention for specified application command.
+        /// </summary>
+        /// <param name="command">Application command to mention.</param>
+        /// <returns>Formatted mention.</returns>
+        public static string Mention(DiscordApplicationCommand command)
+            => $"</{command.Name}:{command.Id.ToString(CultureInfo.InvariantCulture)}>";
 
         /// <summary>
         /// Creates a custom emoji string.

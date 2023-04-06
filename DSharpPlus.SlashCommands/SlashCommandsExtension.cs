@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using DSharpPlus.AsyncEvents;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using DSharpPlus.SlashCommands.EventArgs;
-
-using Emzi0767.Utilities;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -64,14 +64,14 @@ namespace DSharpPlus.SlashCommands
 
             this.Client = client;
 
-            this._slashError = new AsyncEvent<SlashCommandsExtension, SlashCommandErrorEventArgs>("SLASHCOMMAND_ERRORED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._slashInvoked = new AsyncEvent<SlashCommandsExtension, SlashCommandInvokedEventArgs>("SLASHCOMMAND_RECEIVED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._slashExecuted = new AsyncEvent<SlashCommandsExtension, SlashCommandExecutedEventArgs>("SLASHCOMMAND_EXECUTED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._contextMenuErrored = new AsyncEvent<SlashCommandsExtension, ContextMenuErrorEventArgs>("CONTEXTMENU_ERRORED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._contextMenuExecuted = new AsyncEvent<SlashCommandsExtension, ContextMenuExecutedEventArgs>("CONTEXTMENU_EXECUTED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._contextMenuInvoked = new AsyncEvent<SlashCommandsExtension, ContextMenuInvokedEventArgs>("CONTEXTMENU_RECEIVED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._autocompleteErrored = new AsyncEvent<SlashCommandsExtension, AutocompleteErrorEventArgs>("AUTOCOMPLETE_ERRORED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._autocompleteExecuted = new AsyncEvent<SlashCommandsExtension, AutocompleteExecutedEventArgs>("AUTOCOMPLETE_EXECUTED", TimeSpan.Zero, this.Client.EventErrorHandler);
+            this._slashError = new AsyncEvent<SlashCommandsExtension, SlashCommandErrorEventArgs>("SLASHCOMMAND_ERRORED", this.Client.EventErrorHandler);
+            this._slashInvoked = new AsyncEvent<SlashCommandsExtension, SlashCommandInvokedEventArgs>("SLASHCOMMAND_RECEIVED", this.Client.EventErrorHandler);
+            this._slashExecuted = new AsyncEvent<SlashCommandsExtension, SlashCommandExecutedEventArgs>("SLASHCOMMAND_EXECUTED", this.Client.EventErrorHandler);
+            this._contextMenuErrored = new AsyncEvent<SlashCommandsExtension, ContextMenuErrorEventArgs>("CONTEXTMENU_ERRORED", this.Client.EventErrorHandler);
+            this._contextMenuExecuted = new AsyncEvent<SlashCommandsExtension, ContextMenuExecutedEventArgs>("CONTEXTMENU_EXECUTED", this.Client.EventErrorHandler);
+            this._contextMenuInvoked = new AsyncEvent<SlashCommandsExtension, ContextMenuInvokedEventArgs>("CONTEXTMENU_RECEIVED", this.Client.EventErrorHandler);
+            this._autocompleteErrored = new AsyncEvent<SlashCommandsExtension, AutocompleteErrorEventArgs>("AUTOCOMPLETE_ERRORED", this.Client.EventErrorHandler);
+            this._autocompleteExecuted = new AsyncEvent<SlashCommandsExtension, AutocompleteExecutedEventArgs>("AUTOCOMPLETE_EXECUTED", this.Client.EventErrorHandler);
 
             this.Client.Ready += this.Update;
             this.Client.InteractionCreated += this.InteractionHandler;
@@ -203,6 +203,10 @@ namespace DSharpPlus.SlashCommands
                                 if (parameters?.Length is null or 0 || !ReferenceEquals(parameters.First().ParameterType, typeof(InteractionContext)))
                                     throw new ArgumentException($"The first argument must be an InteractionContext!");
                                 parameters = parameters.Skip(1).ToArray();
+
+                                //Check if the ReturnType can be safely casted to a Task later on execution
+                                if (!typeof(Task).IsAssignableFrom(submethod.ReturnType))
+                                    throw new InvalidOperationException("The method has to return a Task or Task<> value");
 
                                 var options = await this.ParseParameters(parameters, guildId);
 
@@ -411,7 +415,8 @@ namespace DSharpPlus.SlashCommands
 
                 //Sets the type
                 var type = parameter.ParameterType;
-                var parametertype = this.GetParameterType(type);
+                var commandName = parameter.Member.GetCustomAttribute<SlashCommandAttribute>()?.Name ?? parameter.Member.GetCustomAttribute<ContextMenuAttribute>().Name;
+                var parametertype = this.GetParameterType(commandName, type);
 
                 //Handles choices
                 //From attributes
@@ -518,7 +523,7 @@ namespace DSharpPlus.SlashCommands
         }
 
         //Small method to get the parameter's type from its type
-        private ApplicationCommandOptionType GetParameterType(Type type)
+        private ApplicationCommandOptionType GetParameterType(string commandName, Type type)
         {
             if (type == typeof(string))
                 return ApplicationCommandOptionType.String;
@@ -544,7 +549,7 @@ namespace DSharpPlus.SlashCommands
                 return ApplicationCommandOptionType.String;
             if (type == typeof(DiscordAttachment))
                 return ApplicationCommandOptionType.Attachment;
-            throw new ArgumentException("Cannot convert type! Argument types must be string, long, bool, double, TimeSpan?, DiscordChannel, DiscordUser, DiscordRole, DiscordEmoji, DiscordAttachment, SnowflakeObject, or an Enum.");
+            throw new ArgumentException($"Cannot convert type! (Command: {commandName}) Argument types must be string, long, bool, double, TimeSpan?, DiscordChannel, DiscordUser, DiscordRole, DiscordEmoji, DiscordAttachment, SnowflakeObject, or an Enum.");
         }
 
         //Gets choices from choice attributes
@@ -568,6 +573,20 @@ namespace DSharpPlus.SlashCommands
             {
                 if (e.Interaction.Type == InteractionType.ApplicationCommand)
                 {
+                    var qualifiedName = new StringBuilder(e.Interaction.Data.Name);
+                    var options = e.Interaction.Data.Options?.ToArray() ?? Array.Empty<DiscordInteractionDataOption>();
+                    while (options.Any())
+                    {
+                        var firstOption = options[0];
+                        if (firstOption.Type is not ApplicationCommandOptionType.SubCommandGroup and not ApplicationCommandOptionType.SubCommand)
+                        {
+                            break;
+                        }
+
+                        _ = qualifiedName.AppendFormat(" {0}", firstOption.Name);
+                        options = firstOption.Options?.ToArray() ?? Array.Empty<DiscordInteractionDataOption>();
+                    }
+
                     //Creates the context
                     var context = new InteractionContext
                     {
@@ -578,6 +597,7 @@ namespace DSharpPlus.SlashCommands
                         Client = client,
                         SlashCommandsExtension = this,
                         CommandName = e.Interaction.Data.Name,
+                        QualifiedName = qualifiedName.ToString(),
                         InteractionId = e.Interaction.Id,
                         Token = e.Interaction.Token,
                         Services = this._configuration?.Services,
@@ -762,7 +782,7 @@ namespace DSharpPlus.SlashCommands
             //Slash commands
             if (context is InteractionContext slashContext)
             {
-                await this._slashInvoked.InvokeAsync(this, new SlashCommandInvokedEventArgs { Context = slashContext }, AsyncEventExceptionMode.ThrowAll);
+                await this._slashInvoked.InvokeAsync(this, new SlashCommandInvokedEventArgs { Context = slashContext });
 
                 await this.RunPreexecutionChecksAsync(method, slashContext);
 
@@ -780,7 +800,7 @@ namespace DSharpPlus.SlashCommands
             //Context menus
             if (context is ContextMenuContext CMContext)
             {
-                await this._contextMenuInvoked.InvokeAsync(this, new ContextMenuInvokedEventArgs() { Context = CMContext }, AsyncEventExceptionMode.ThrowAll);
+                await this._contextMenuInvoked.InvokeAsync(this, new ContextMenuInvokedEventArgs() { Context = CMContext });
 
                 await this.RunPreexecutionChecksAsync(method, CMContext);
 
@@ -1100,7 +1120,7 @@ namespace DSharpPlus.SlashCommands
                 if (provider == null) return;
 
                 var providerMethod = provider.GetMethod(nameof(IAutocompleteProvider.Provider));
-                var providerInstance = Activator.CreateInstance(provider);
+                var providerInstance = ActivatorUtilities.CreateInstance(this._configuration.Services, provider);
 
                 var choices = await (Task<IEnumerable<DiscordAutoCompleteChoice>>) providerMethod.Invoke(providerInstance, new[] { context });
                 await interaction.CreateResponseAsync(InteractionResponseType.AutoCompleteResult, new DiscordInteractionResponseBuilder().AddAutoCompleteChoices(choices));
@@ -1214,6 +1234,28 @@ namespace DSharpPlus.SlashCommands
             remove => this._autocompleteExecuted.Register(value);
         }
         private AsyncEvent<SlashCommandsExtension, AutocompleteExecutedEventArgs> _autocompleteExecuted;
+
+
+        public override void Dispose()
+        {
+            this._slashError.UnregisterAll();
+            this._slashInvoked.UnregisterAll();
+            this._slashExecuted.UnregisterAll();
+            this._contextMenuErrored.UnregisterAll();
+            this._contextMenuExecuted.UnregisterAll();
+            this._contextMenuInvoked.UnregisterAll();
+            this._autocompleteErrored.UnregisterAll();
+            this._autocompleteExecuted.UnregisterAll();
+
+            this.Client.Ready -= this.Update;
+            this.Client.InteractionCreated -= this.InteractionHandler;
+            this.Client.ContextMenuInteractionCreated -= this.ContextMenuHandler;
+        }
+
+        ~SlashCommandsExtension()
+        {
+            this.Dispose();
+        }
     }
 
     //I'm not sure if creating separate classes is the cleanest thing here but I can't think of anything else so these stay

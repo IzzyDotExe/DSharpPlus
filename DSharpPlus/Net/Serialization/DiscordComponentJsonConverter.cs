@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -48,8 +48,12 @@ namespace DSharpPlus.Net.Serialization
                 ComponentType.ActionRow => new DiscordActionRowComponent(),
                 ComponentType.Button when (int)job["style"] is 5 => new DiscordLinkButtonComponent(),
                 ComponentType.Button => new DiscordButtonComponent(),
-                ComponentType.Select => new DiscordSelectComponent(),
+                ComponentType.StringSelect => new DiscordSelectComponent(),
                 ComponentType.FormInput => new TextInputComponent(),
+                ComponentType.UserSelect => new DiscordUserSelectComponent(),
+                ComponentType.RoleSelect => new DiscordRoleSelectComponent(),
+                ComponentType.MentionableSelect => new DiscordMentionableSelectComponent(),
+                ComponentType.ChannelSelect => new DiscordChannelSelectComponent(),
                 _ => new DiscordComponent() { Type = type.Value }
             };
 

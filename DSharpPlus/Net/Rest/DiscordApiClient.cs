@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -288,7 +288,7 @@ namespace DSharpPlus.Net
             Optional<ExplicitContentFilter> explicitContentFilter, Optional<ulong?> afkChannelId,
             Optional<int> afkTimeout, Optional<string> iconb64, Optional<ulong> ownerId, Optional<string> splashb64,
             Optional<ulong?> systemChannelId, Optional<string> banner, Optional<string> description,
-            Optional<string> discorverySplash, Optional<IEnumerable<string>> features, Optional<string> preferredLocale,
+            Optional<string> discoverySplash, Optional<IEnumerable<string>> features, Optional<string> preferredLocale,
             Optional<ulong?> publicUpdatesChannelId, Optional<ulong?> rulesChannelId, Optional<SystemChannelFlags> systemChannelFlags,
             string reason)
         {
@@ -308,7 +308,7 @@ namespace DSharpPlus.Net
                 SystemChannelId = systemChannelId,
                 Banner = banner,
                 Description = description,
-                DiscoverySplash = discorverySplash,
+                DiscoverySplash = discoverySplash,
                 Features = features,
                 PreferredLocale = preferredLocale,
                 PublicUpdatesChannelId = publicUpdatesChannelId,
@@ -973,7 +973,27 @@ namespace DSharpPlus.Net
         #endregion
 
         #region Channel
-        internal async Task<DiscordChannel> CreateGuildChannelAsync(ulong guild_id, string name, ChannelType type, ulong? parent, Optional<string> topic, int? bitrate, int? user_limit, IEnumerable<DiscordOverwriteBuilder> overwrites, bool? nsfw, Optional<int?> perUserRateLimit, VideoQualityMode? qualityMode, int? position, string reason)
+        internal async Task<DiscordChannel> CreateGuildChannelAsync
+        (
+            ulong guild_id,
+            string name,
+            ChannelType type,
+            ulong? parent,
+            Optional<string> topic,
+            int? bitrate,
+            int? user_limit,
+            IEnumerable<DiscordOverwriteBuilder> overwrites,
+            bool? nsfw,
+            Optional<int?> perUserRateLimit,
+            VideoQualityMode? qualityMode,
+            int? position,
+            string reason,
+            AutoArchiveDuration? defaultAutoArchiveDuration,
+            DefaultReaction? defaultReactionEmoji,
+            IEnumerable<DiscordForumTagBuilder> forumTags,
+            DefaultSortOrder? defaultSortOrder
+
+        )
         {
             var restoverwrites = new List<DiscordRestOverwrite>();
             if (overwrites != null)
@@ -992,7 +1012,11 @@ namespace DSharpPlus.Net
                 Nsfw = nsfw,
                 PerUserRateLimit = perUserRateLimit,
                 QualityMode = qualityMode,
-                Position = position
+                Position = position,
+                DefaultAutoArchiveDuration = defaultAutoArchiveDuration,
+                DefaultReaction = defaultReactionEmoji,
+                AvailableTags = forumTags,
+                DefaultSortOrder = defaultSortOrder
             };
 
             var headers = Utilities.GetBaseHeaders();
@@ -1016,7 +1040,30 @@ namespace DSharpPlus.Net
             return ret;
         }
 
-        internal Task ModifyChannelAsync(ulong channel_id, string name, int? position, Optional<string> topic, bool? nsfw, Optional<ulong?> parent, int? bitrate, int? user_limit, Optional<int?> perUserRateLimit, Optional<string> rtcRegion, VideoQualityMode? qualityMode, Optional<ChannelType> type, IEnumerable<DiscordOverwriteBuilder> permissionOverwrites, string reason)
+        internal Task ModifyChannelAsync
+        (
+            ulong channel_id,
+            string name,
+            int? position,
+            Optional<string> topic,
+            bool? nsfw,
+            Optional<ulong?> parent,
+            int? bitrate,
+            int? user_limit,
+            Optional<int?> perUserRateLimit,
+            Optional<string> rtcRegion,
+            VideoQualityMode? qualityMode,
+            Optional<ChannelType> type,
+            IEnumerable<DiscordOverwriteBuilder> permissionOverwrites,
+            string reason,
+            Optional<ChannelFlags> flags,
+            IEnumerable<DiscordForumTagBuilder>? availableTags,
+            Optional<AutoArchiveDuration?> defaultAutoArchiveDuration,
+            Optional<DefaultReaction?> defaultReactionEmoji,
+            Optional<int> defaultPerUserRatelimit,
+            Optional<DefaultSortOrder?> defaultSortOrder,
+            Optional<DefaultForumLayout> defaultForumLayout
+        )
         {
             List<DiscordRestOverwrite> restoverwrites = null;
             if (permissionOverwrites != null)
@@ -1039,7 +1086,13 @@ namespace DSharpPlus.Net
                 RtcRegion = rtcRegion,
                 QualityMode = qualityMode,
                 Type = type,
-                PermissionOverwrites = restoverwrites
+                PermissionOverwrites = restoverwrites,
+                Flags = flags,
+                AvailableTags = availableTags,
+                DefaultAutoArchiveDuration = defaultAutoArchiveDuration,
+                DefaultReaction = defaultReactionEmoji,
+                DefaultForumLayout = defaultForumLayout,
+                DefaultSortOrder = defaultSortOrder
             };
 
             var headers = Utilities.GetBaseHeaders();
@@ -1053,7 +1106,27 @@ namespace DSharpPlus.Net
             return this.DoRequestAsync(this._discord, bucket, url, RestRequestMethod.PATCH, route, headers, DiscordJson.SerializeObject(pld));
         }
 
-        internal Task ModifyThreadChannelAsync(ulong channel_id, string name, int? position, Optional<string> topic, bool? nsfw, Optional<ulong?> parent, int? bitrate, int? user_limit, Optional<int?> perUserRateLimit, Optional<string> rtcRegion, VideoQualityMode? qualityMode, Optional<ChannelType> type, IEnumerable<DiscordOverwriteBuilder> permissionOverwrites, bool? isArchived, AutoArchiveDuration? autoArchiveDuration, bool? locked, string reason)
+        internal Task ModifyThreadChannelAsync
+        (
+            ulong channel_id,
+            string name,
+            int? position,
+            Optional<string> topic,
+            bool? nsfw,
+            Optional<ulong?> parent,
+            int? bitrate,
+            int? user_limit,
+            Optional<int?> perUserRateLimit,
+            Optional<string> rtcRegion,
+            VideoQualityMode? qualityMode,
+            Optional<ChannelType> type,
+            IEnumerable<DiscordOverwriteBuilder> permissionOverwrites,
+            bool? isArchived,
+            AutoArchiveDuration? autoArchiveDuration,
+            bool? locked,
+            string reason,
+            IEnumerable<ulong> applied_tags
+        )
         {
             List<DiscordRestOverwrite> restoverwrites = null;
             if (permissionOverwrites != null)
@@ -1079,7 +1152,8 @@ namespace DSharpPlus.Net
                 PermissionOverwrites = restoverwrites,
                 IsArchived = isArchived,
                 ArchiveDuration = autoArchiveDuration,
-                Locked = locked
+                Locked = locked,
+                AppliedTags = applied_tags
             };
 
             var headers = Utilities.GetBaseHeaders();
@@ -1300,7 +1374,7 @@ namespace DSharpPlus.Net
             return ret;
         }
 
-        internal async Task<DiscordMessage> CreateMessageAsync(ulong channel_id, string content, IEnumerable<DiscordEmbed> embeds, ulong? replyMessageId, bool mentionReply, bool failOnInvalidReply)
+        internal async Task<DiscordMessage> CreateMessageAsync(ulong channel_id, string content, IEnumerable<DiscordEmbed> embeds, ulong? replyMessageId, bool mentionReply, bool failOnInvalidReply, bool suppressNotifications)
         {
             if (content != null && content.Length > 2000)
                 throw new ArgumentException("Message content length cannot exceed 2000 characters.");
@@ -1325,7 +1399,8 @@ namespace DSharpPlus.Net
                 Content = content,
                 IsTTS = false,
                 HasEmbed = embeds?.Any() ?? false,
-                Embeds = embeds
+                Embeds = embeds,
+                Flags = suppressNotifications ? MessageFlags.SupressNotifications : 0,
             };
 
             if (replyMessageId != null)
@@ -1358,7 +1433,7 @@ namespace DSharpPlus.Net
             {
                 HasContent = builder.Content != null,
                 Content = builder.Content,
-                StickersIds = builder.Sticker is null ? Array.Empty<ulong>() : new[] {builder.Sticker.Id},
+                StickersIds = builder._stickers?.Where(s => s != null).Select(s => s.Id).ToArray(),
                 IsTTS = builder.IsTTS,
                 HasEmbed = builder.Embeds != null,
                 Embeds = builder.Embeds,
@@ -1978,7 +2053,7 @@ namespace DSharpPlus.Net
             return result;
         }
 
-        internal async Task<ThreadQueryResult> ListPublicArchivedThreadsAsync(ulong guild_id, ulong channel_id, ulong? before, int limit)
+        internal async Task<ThreadQueryResult> ListPublicArchivedThreadsAsync(ulong guild_id, ulong channel_id, string before, int limit)
         {
             var queryParams = new Dictionary<string, string>();
             if (before != null)
@@ -2008,7 +2083,7 @@ namespace DSharpPlus.Net
             return result;
         }
 
-        internal async Task<ThreadQueryResult> ListPrivateArchivedThreadsAsync(ulong guild_id, ulong channel_id, ulong? before, int limit)
+        internal async Task<ThreadQueryResult> ListPrivateArchivedThreadsAsync(ulong guild_id, ulong channel_id, string before, int limit)
         {
             var queryParams = new Dictionary<string, string>();
             if (before != null)
@@ -3416,7 +3491,7 @@ namespace DSharpPlus.Net
                     Embeds = builder.Embeds,
                     IsTTS = builder.IsTTS,
                     Mentions = new DiscordMentions(builder.Mentions ?? Mentions.All, builder.Mentions?.Any() ?? false),
-                    Flags = builder.IsEphemeral ? MessageFlags.Ephemeral : 0,
+                    Flags = builder.Flags,
                     Components = builder.Components,
                     Choices = builder.Choices
                 } : null
@@ -3481,7 +3556,7 @@ namespace DSharpPlus.Net
                 Content = builder.Content,
                 IsTTS = builder.IsTTS,
                 Embeds = builder.Embeds,
-                Flags = builder.Flags,
+                Flags = builder._flags,
                 Components = builder.Components
             };
 
@@ -3545,7 +3620,7 @@ namespace DSharpPlus.Net
 
         internal async Task<DiscordGuildApplicationCommandPermissions> EditApplicationCommandPermissionsAsync(ulong application_id, ulong guild_id, ulong command_id, IEnumerable<DiscordApplicationCommandPermission> permissions)
         {
-            var pld = new RestEditApplicationCommmandPermissionsPayload
+            var pld = new RestEditApplicationCommandPermissionsPayload
             {
                 Permissions = permissions
             };
@@ -3629,5 +3704,67 @@ namespace DSharpPlus.Net
         }
         #endregion
 
+        public async Task<DiscordForumPostStarter> CreateForumPostAsync
+        (
+            ulong channelId,
+            string name,
+            AutoArchiveDuration? autoArchiveDuration,
+            int? rate_limit_per_user,
+            DiscordMessageBuilder message,
+            IEnumerable<ulong> appliedTags
+        )
+        {
+            var route = $"{Endpoints.CHANNELS}/:channel_id{Endpoints.THREADS}";
+
+            var bucket = this._rest.GetBucket(RestRequestMethod.POST, route, new { channel_id = channelId }, out var path);
+
+            var url = Utilities.GetApiUriFor(path);
+
+            var pld = new RestForumPostCreatePayload
+            {
+                Name = name,
+                ArchiveAfter = autoArchiveDuration,
+                RateLimitPerUser = rate_limit_per_user,
+                Message = new RestChannelMessageCreatePayload
+                {
+                    Content = message.Content,
+                    HasContent = !string.IsNullOrWhiteSpace(message.Content),
+                    Embeds = message.Embeds,
+                    HasEmbed = message.Embeds.Count > 0,
+                    Mentions = new DiscordMentions(message.Mentions, message.Mentions.Any()),
+                    Components = message.Components,
+                    StickersIds = message.Stickers?.Select(s => s.Id) ?? Array.Empty<ulong>(),
+                },
+                AppliedTags = appliedTags
+            };
+
+            JObject ret;
+            if (message.Files.Count is 0)
+            {
+                var res = await this.DoRequestAsync(this._discord, bucket, url, RestRequestMethod.POST, route, payload: DiscordJson.SerializeObject(pld)).ConfigureAwait(false);
+
+                ret = JObject.Parse(res.Response);
+            }
+            else
+            {
+                var values = new Dictionary<string, string>
+                {
+                    ["payload_json"] = DiscordJson.SerializeObject(pld)
+                };
+
+                var res = await this.DoMultipartAsync(this._discord, bucket, url, RestRequestMethod.POST, route, values: values, files: message.Files).ConfigureAwait(false);
+
+                ret = JObject.Parse(res.Response);
+            }
+
+            var msgToken = ret["message"];
+            ret.Remove("message");
+
+            var msg = this.PrepareMessage(msgToken);
+            // We know the return type; deserialize directly.
+            var chn = ret.ToDiscordObject<DiscordThreadChannel>();
+
+            return new DiscordForumPostStarter(chn, msg);
+        }
     }
 }

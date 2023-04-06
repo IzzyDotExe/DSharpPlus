@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +41,7 @@ namespace DSharpPlus.Test
         {
             var input = ctx.Client.GetInteractivity();
             var builder = new DiscordMessageBuilder();
-            builder.WithContent("This is a test! Select is valid for 30 seconds.");
+            builder.WithContent("This is a test! StringSelect is valid for 30 seconds.");
 
             var opts = new[]
             {
@@ -74,7 +74,7 @@ namespace DSharpPlus.Test
         {
             var input = ctx.Client.GetInteractivity();
             var builder = new DiscordMessageBuilder();
-            builder.WithContent("This is a test! Select is valid for 30 seconds.");
+            builder.WithContent("This is a test! StringSelect is valid for 30 seconds.");
 
             var opts = new[]
             {
