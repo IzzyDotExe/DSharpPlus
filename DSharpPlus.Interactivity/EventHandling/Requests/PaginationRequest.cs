@@ -235,11 +235,13 @@ namespace DSharpPlus.Interactivity
     {
         public string Content { get; set; }
         public DiscordEmbed Embed { get; set; }
+        public List<DiscordComponent> Components { get; set; }
 
-        public Page(string content = "", DiscordEmbedBuilder embed = null)
+        public Page(string content = "", DiscordEmbedBuilder embed = null, List<DiscordComponent> Components = null)
         {
             this.Content = content;
             this.Embed = embed?.Build();
+            this.Components = Components ?? new List<DiscordComponent>();
         }
     }
 }

@@ -51,7 +51,7 @@ namespace DSharpPlus.Test
             if (e.Id != "a")
                 return Task.CompletedTask;
             var pages = sender.GetInteractivity().GeneratePagesInContent(Lorem);
-            _ = sender.GetInteractivity().SendPaginatedResponseAsync(e.Interaction, true, e.User, pages);
+            _ = sender.GetInteractivity().SendPaginatedResponseAsync(e.Interaction, true, false, e.User, pages);
             sender.ComponentInteractionCreated -= this.Handle;
             return Task.CompletedTask;
         }

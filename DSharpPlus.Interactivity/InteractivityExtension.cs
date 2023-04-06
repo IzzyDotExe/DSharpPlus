@@ -832,6 +832,7 @@ namespace DSharpPlus.Interactivity
                     .AddEmbed(pages.First().Embed)
                     .AsEphemeral(ephemeral)
                     .AddComponents(bts.ButtonArray);
+
                 if (update) {
                     await interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, builder);
                 } else {
