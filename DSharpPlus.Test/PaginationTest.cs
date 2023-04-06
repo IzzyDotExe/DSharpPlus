@@ -23,6 +23,8 @@
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Extensions;
 
 namespace DSharpPlus.Test;
@@ -49,9 +51,9 @@ public class PaginationTest : BaseCommandModule
             if (e.Id != "a")
                 return Task.CompletedTask;
             var pages = sender.GetInteractivity().GeneratePagesInContent(Lorem);
-            _ = sender.GetInteractivity().SendPaginatedResponseAsync(e.Interaction, true, e.User, pages);
+            _ = sender.GetInteractivity().SendPaginatedResponseAsync(e.Interaction, true, false, e.User, pages);
             sender.ComponentInteractionCreated -= this.Handle;
             return Task.CompletedTask;
         }
-    }
 }
+
