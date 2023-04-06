@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,11 @@ using System.Threading.Tasks;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 
-namespace DSharpPlus.Test
+namespace DSharpPlus.Test;
+
+public class SlashCommandMinMaxLengthTest : ApplicationCommandModule
 {
-    public class SlashCommandMinMaxLengthTest : ApplicationCommandModule
-    {
-        [SlashCommand("minmaxlength", "testing min and max length")]
-        public async Task MinMaxAsync(InteractionContext ctx, [Option("value", "value with limits")][MinimumLength(5), MaximumLength(7)] string thing)
-            => await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(thing));
-    }
+    [SlashCommand("minmaxlength", "testing min and max length")]
+    public async Task MinMaxAsync(InteractionContext ctx, [Option("value", "value with limits")][MinimumLength(5), MaximumLength(7)] string thing)
+        => await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().WithContent(thing));
 }

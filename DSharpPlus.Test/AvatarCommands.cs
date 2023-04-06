@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,20 @@ using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
-namespace DSharpPlus.Test
+namespace DSharpPlus.Test;
+
+public class AvatarCommands : BaseCommandModule
 {
-    public class AvatarCommands : BaseCommandModule
+    [Command("avatar")]
+    public async Task AvatarAsync(CommandContext ctx)
     {
-        [Command("avatar")]
-        public async Task AvatarAsync(CommandContext ctx)
+        if (ctx.Member.GuildAvatarHash != ctx.User.AvatarHash)
         {
-            if (ctx.Member.GuildAvatarHash != ctx.User.AvatarHash)
-                await ctx.RespondAsync($"You have a custom guild-specific avatar set! Guild: {ctx.Member.GuildAvatarUrl}\n User: {ctx.Member.AvatarUrl}");
-            else
-                await ctx.RespondAsync($"You don't have a custom guild-specific avatar set! Avatar url: {ctx.Member.AvatarUrl}");
+            await ctx.RespondAsync($"You have a custom guild-specific avatar set! Guild: {ctx.Member.GuildAvatarUrl}\n User: {ctx.Member.AvatarUrl}");
+        }
+        else
+        {
+            await ctx.RespondAsync($"You don't have a custom guild-specific avatar set! Avatar url: {ctx.Member.AvatarUrl}");
         }
     }
 }

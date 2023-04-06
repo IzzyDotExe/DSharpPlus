@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,10 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using DSharpPlus.AsyncEvents;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.CommandsNext.Builders;
 using DSharpPlus.CommandsNext.Converters;
@@ -36,7 +39,6 @@ using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.CommandsNext.Executors;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using Emzi0767.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -45,7 +47,7 @@ namespace DSharpPlus.CommandsNext
     /// <summary>
     /// This is the class which handles command registration, management, and execution.
     /// </summary>
-    public class CommandsNextExtension : BaseExtension, IDisposable
+    public class CommandsNextExtension : BaseExtension
     {
         private CommandsNextConfiguration Config { get; }
         private HelpFormatterFactory HelpFormatter { get; }
@@ -163,8 +165,13 @@ namespace DSharpPlus.CommandsNext
         /// <summary>
         /// Disposes of this the resources used by CNext.
         /// </summary>
-        public void Dispose()
+        public override void Dispose()
             => this.Config.CommandExecutor.Dispose();
+
+        ~CommandsNextExtension()
+        {
+            this.Dispose();
+        }
 
         #region DiscordClient Registration
         /// <summary>
@@ -179,8 +186,8 @@ namespace DSharpPlus.CommandsNext
 
             this.Client = client;
 
-            this._executed = new AsyncEvent<CommandsNextExtension, CommandExecutionEventArgs>("COMMAND_EXECUTED", TimeSpan.Zero, this.Client.EventErrorHandler);
-            this._error = new AsyncEvent<CommandsNextExtension, CommandErrorEventArgs>("COMMAND_ERRORED", TimeSpan.Zero, this.Client.EventErrorHandler);
+            this._executed = new AsyncEvent<CommandsNextExtension, CommandExecutionEventArgs>("COMMAND_EXECUTED", this.Client.EventErrorHandler);
+            this._error = new AsyncEvent<CommandsNextExtension, CommandErrorEventArgs>("COMMAND_ERRORED", this.Client.EventErrorHandler);
 
             if (this.Config.UseDefaultCommandHandler)
                 this.Client.MessageCreated += this.HandleCommandsAsync;
@@ -462,6 +469,8 @@ namespace DSharpPlus.CommandsNext
             var moduleHidden = false;
             var moduleChecks = new List<CheckBaseAttribute>();
 
+            groupBuilder.WithCategory(this.ExtractCategoryAttribute(t));
+
             foreach (var xa in moduleAttributes)
             {
                 switch (xa)
@@ -568,6 +577,8 @@ namespace DSharpPlus.CommandsNext
                     foreach (var chk in moduleChecks)
                         commandBuilder.WithExecutionCheck(chk);
 
+                commandBuilder.WithCategory(this.ExtractCategoryAttribute(m));
+
                 foreach (var xa in attrs)
                 {
                     switch (xa)
@@ -587,10 +598,6 @@ namespace DSharpPlus.CommandsNext
 
                         case HiddenAttribute h:
                             commandBuilder.WithHiddenStatus(true);
-                            break;
-
-                        case CategoryAttribute c:
-                            commandBuilder.WithCategory(c.Name);
                             break;
 
                         default:
@@ -653,6 +660,40 @@ namespace DSharpPlus.CommandsNext
             var keys = this.RegisteredCommands.Where(x => cmds.Contains(x.Value)).Select(x => x.Key).ToList();
             foreach (var key in keys)
                 this.TopLevelCommands.Remove(key);
+        }
+
+        private string? ExtractCategoryAttribute(MethodInfo method)
+        {
+            CategoryAttribute attribute = method.GetCustomAttribute<CategoryAttribute>();
+
+            if(attribute is not null)
+            {
+                return attribute.Name;
+            }
+
+            // extract from types
+
+            return this.ExtractCategoryAttribute(method.DeclaringType);
+        }
+
+        private string? ExtractCategoryAttribute(Type type)
+        {
+            CategoryAttribute attribute;
+
+            do
+            {
+                attribute = type.GetCustomAttribute<CategoryAttribute>();
+
+                if (attribute is not null)
+                {
+                    return attribute.Name;
+                }
+
+                type = type.DeclaringType;
+
+            } while (type is not null);
+
+            return null;
         }
 
         private void AddToCommandDictionary(Command cmd)

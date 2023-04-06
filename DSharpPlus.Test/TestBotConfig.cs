@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,19 @@
 
 using Newtonsoft.Json;
 
-namespace DSharpPlus.Test
+namespace DSharpPlus.Test;
+
+internal sealed class TestBotConfig
 {
-    internal sealed class TestBotConfig
-    {
-        [JsonProperty("token")]
-        public string Token { get; private set; } = string.Empty;
+    [JsonProperty("token")]
+    public string Token { get; private set; } = string.Empty;
 
-        [JsonProperty("command_prefixes")]
-        public string[] CommandPrefixes { get; private set; } = new[] { "d#", "d#+" };
+    [JsonProperty("command_prefixes")]
+    public string[] CommandPrefixes { get; private set; } = new[] { "d#", "d#+" };
 
-        [JsonProperty("shards")]
-        public int ShardCount { get; private set; } = 1;
+    [JsonProperty("shards")]
+    public int ShardCount { get; private set; } = 1;
 
-        [JsonProperty("slash_command_guild")]
-        public ulong SlashCommandGuild { get; private set; }
-    }
+    [JsonProperty("slash_command_guild")]
+    public ulong SlashCommandGuild { get; private set; }
 }

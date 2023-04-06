@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -84,7 +85,7 @@ namespace DSharpPlus.Entities
 
 
         /// <summary>
-        /// Gets the autoincrementing version number for this command.
+        /// Gets the auto-incrementing version number for this command.
         /// </summary>
         [JsonProperty("version")]
         public ulong Version { get; internal set; }
@@ -94,6 +95,13 @@ namespace DSharpPlus.Entities
 
         [JsonProperty("description_localizations")]
         public IReadOnlyDictionary<string, string> DescriptionLocalizations { get; internal set; }
+
+        /// <summary>
+        /// Gets the command's mention string.
+        /// </summary>
+        [JsonIgnore]
+        public string Mention
+            => Formatter.Mention(this);
 
         /// <summary>
         /// Creates a new instance of a <see cref="DiscordApplicationCommand"/>.
@@ -138,6 +146,19 @@ namespace DSharpPlus.Entities
             this.DescriptionLocalizations = description_localizations;
             this.AllowDMUsage = allowDMUsage;
             this.DefaultMemberPermissions = defaultMemberPermissions;
+        }
+
+        /// <summary>
+        /// Creates a mention for a subcommand.
+        /// </summary>
+        /// <param name="name">The name of the subgroup and/or subcommand.</param>
+        /// <returns>Formatted mention.</returns>
+        public string GetSubcommandMention(params string[] name)
+        {
+            if (!this.Options.Any(x => x.Name == name[0]))
+                throw new ArgumentException("Specified subgroup/subcommand doesn't exist.");
+
+            return $"</{this.Name} {string.Join(" ", name)}:{this.Id.ToString(CultureInfo.InvariantCulture)}>";
         }
 
         /// <summary>

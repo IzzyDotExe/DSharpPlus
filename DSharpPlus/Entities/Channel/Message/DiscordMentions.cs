@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -118,7 +118,7 @@ namespace DSharpPlus.Entities
             if (!parse.Contains(ParseRoles) && roles.Count > 0)
                 this.Roles = roles;
 
-            //If we have a empty parse aray, we don't want to add it.
+            //If we have a empty parse array, we don't want to add it.
             if (parse.Count > 0)
                 this.Parse = parse;
         }

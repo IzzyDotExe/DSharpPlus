@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -123,9 +123,17 @@ namespace DSharpPlus.Entities
             this.Discord.ApiClient.CreateInteractionResponseAsync(this.Id, this.Token, type, builder);
 
         /// <summary>
+        ///     Creates a deferred response to this interaction.
+        /// </summary>
+        /// <param name="ephemeral">Whether the response should be ephemeral.</param>
+        public Task DeferAsync(bool ephemeral = false) => this.CreateResponseAsync(
+            InteractionResponseType.DeferredChannelMessageWithSource,
+            new DiscordInteractionResponseBuilder().AsEphemeral(ephemeral));
+
+        /// <summary>
         /// Gets the original interaction response.
         /// </summary>
-        /// <returns>The origingal message that was sent. This <b>does not work on ephemeral messages.</b></returns>
+        /// <returns>The original message that was sent. This <b>does not work on ephemeral messages.</b></returns>
         public Task<DiscordMessage> GetOriginalResponseAsync() =>
             this.Discord.ApiClient.GetOriginalInteractionResponseAsync(this.Discord.CurrentApplication.Id, this.Token);
 

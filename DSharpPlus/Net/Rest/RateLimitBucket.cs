@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -119,7 +119,7 @@ namespace DSharpPlus.Net
         internal volatile bool _isUnlimited;
 
         /// <summary>
-        /// If the initial request for this bucket that is deterternining the rate limits is currently executing
+        /// If the initial request for this bucket that is determining  the rate limits is currently executing
         /// This is a int because booleans can't be accessed atomically
         /// 0 => False, all other values => True
         /// </summary>

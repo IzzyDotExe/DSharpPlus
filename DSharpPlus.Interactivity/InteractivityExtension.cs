@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,11 +28,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DSharpPlus.AsyncEvents;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.EventHandling;
-using Emzi0767.Utilities;
 
 namespace DSharpPlus.Interactivity
 {
@@ -403,13 +403,13 @@ namespace DSharpPlus.Interactivity
             if (!message.Components.Any())
                 throw new ArgumentException("Provided message does not contain any components.");
 
-            if (!message.Components.SelectMany(c => c.Components).Any(c => c.Type is ComponentType.Select))
+            if (!message.Components.SelectMany(c => c.Components).Any(this.IsSelect))
                 throw new ArgumentException("Provided message does not contain any select components.");
 
 
             var result = await this
                 .ComponentEventWaiter
-                .WaitForMatchAsync(new(message, c => c.Interaction.Data.ComponentType is ComponentType.Select && predicate(c), token))
+                .WaitForMatchAsync(new(message, c => this.IsSelect(c.Interaction.Data.ComponentType) && predicate(c), token))
                 .ConfigureAwait(false);
 
             return new(result is null, result);
@@ -442,19 +442,31 @@ namespace DSharpPlus.Interactivity
             if (!message.Components.Any())
                 throw new ArgumentException("Provided message does not contain any components.");
 
-            if (!message.Components.SelectMany(c => c.Components).Any(c => c.Type is ComponentType.Select))
+            if (!message.Components.SelectMany(c => c.Components).Any(this.IsSelect))
                 throw new ArgumentException("Provided message does not contain any select components.");
 
-            if (message.Components.SelectMany(c => c.Components).OfType<DiscordSelectComponent>().All(c => c.CustomId != id))
+            if (message.Components.SelectMany(c => c.Components).Where(this.IsSelect).All(c => c.CustomId != id))
                 throw new ArgumentException($"Provided message does not contain select component with Id of '{id}'.");
 
             var result = await this
                 .ComponentEventWaiter
-                .WaitForMatchAsync(new(message, (c) => c.Interaction.Data.ComponentType is ComponentType.Select && c.Id == id, token))
+                .WaitForMatchAsync(new(message, (c) => this.IsSelect(c.Interaction.Data.ComponentType) && c.Id == id, token))
                 .ConfigureAwait(false);
 
             return new(result is null, result);
         }
+
+        private bool IsSelect(DiscordComponent component)
+            => this.IsSelect(component.Type);
+
+        private bool IsSelect(ComponentType type)
+            => type is
+                ComponentType.StringSelect or
+                ComponentType.UserSelect or
+                ComponentType.RoleSelect or
+                ComponentType.MentionableSelect or
+                ComponentType.ChannelSelect;
+
 
         /// <summary>
         /// Waits for a dropdown to be interacted with by a specific user.
@@ -483,10 +495,10 @@ namespace DSharpPlus.Interactivity
             if (!message.Components.Any())
                 throw new ArgumentException("Provided message does not contain any components.");
 
-            if (!message.Components.SelectMany(c => c.Components).Any(c => c.Type is ComponentType.Select))
+            if (!message.Components.SelectMany(c => c.Components).Any(this.IsSelect))
                 throw new ArgumentException("Provided message does not contain any select components.");
 
-            if (message.Components.SelectMany(c => c.Components).OfType<DiscordSelectComponent>().All(c => c.CustomId != id))
+            if (message.Components.SelectMany(c => c.Components).Where(this.IsSelect).All(c => c.CustomId != id))
                 throw new ArgumentException($"Provided message does not contain button with Id of '{id}'.");
 
             var result = await this
@@ -742,7 +754,7 @@ namespace DSharpPlus.Interactivity
         /// <inheritdoc cref="SendPaginatedMessageAsync(DiscordChannel, DiscordUser, IEnumerable{Page}, PaginationButtons, TimeSpan?, PaginationBehaviour?, ButtonPaginationBehavior?)"/>
         /// <remarks>This is the "default" overload for SendPaginatedMessageAsync, and will use buttons. Feel free to specify default(PaginationEmojis) to use reactions and emojis specified in <see cref="InteractivityConfiguration"/>, instead. </remarks>
         public Task SendPaginatedMessageAsync(DiscordChannel channel, DiscordUser user, IEnumerable<Page> pages, TimeSpan? timeoutoverride, PaginationBehaviour? behaviour = default, ButtonPaginationBehavior? deletion = default)
-            => this.SendPaginatedMessageAsync(channel, user, pages, timeoutoverride, behaviour, deletion);
+            => this.SendPaginatedMessageAsync(channel, user, pages, default, timeoutoverride, behaviour, deletion);
 
         /// <summary>
         /// Sends a paginated message.
@@ -790,38 +802,93 @@ namespace DSharpPlus.Interactivity
         /// <param name="deletion">Deletion behaviour</param>
         /// <param name="token">A custom cancellation token that can be cancelled at any point.</param>
         /// <param name="asEditResponse">If the response as edit of previous response.</param>
-        public async Task SendPaginatedResponseAsync(DiscordInteraction interaction, bool ephemeral, bool update, DiscordUser user, IEnumerable<Page> pages, PaginationButtons buttons = null, PaginationBehaviour? behaviour = default, ButtonPaginationBehavior? deletion = default, CancellationToken token = default, bool asEditResponse = false)
+        /// <param name="disableBehavior">Whether to disable or remove the buttons if there is only one page</param>
+        /// <param name="disabledButtons">Disabled buttons</param>
+        public async Task SendPaginatedResponseAsync(DiscordInteraction interaction, bool ephemeral, bool update, DiscordUser user, IEnumerable<Page> pages, PaginationButtons buttons = null, PaginationBehaviour? behaviour = default, ButtonPaginationBehavior? deletion = default, CancellationToken token = default, bool asEditResponse = false, ButtonDisableBehavior disableBehavior = ButtonDisableBehavior.Disable, List<PaginationButtonType> disabledButtons = null)
         {
             var bhv = behaviour ?? this.Config.PaginationBehaviour;
             var del = deletion ?? this.Config.ButtonBehavior;
             var bts = buttons ?? this.Config.PaginationButtons;
+            disabledButtons ??= new List<PaginationButtonType>();
 
             bts = new(bts); // Copy //
 
             if (pages.Count() == 1)
             {
-                bts.SkipLeft.Disable();
-                bts.Left.Disable();
-                bts.Right.Disable();
-                bts.SkipRight.Disable();
+                if (disableBehavior == ButtonDisableBehavior.Disable)
+                {
+                    bts.SkipLeft.Disable();
+                    bts.Left.Disable();
+                    bts.Right.Disable();
+                    bts.SkipRight.Disable();
+                }
+                else
+                    disabledButtons
+                        .AddRange(new []{ PaginationButtonType.Left, PaginationButtonType.Right, PaginationButtonType.SkipLeft, PaginationButtonType.SkipRight });
             }
 
             if (bhv is PaginationBehaviour.Ignore)
             {
-                bts.SkipLeft.Disable();
-                bts.Left.Disable();
+                if (disableBehavior == ButtonDisableBehavior.Disable)
+                {
+                    bts.SkipLeft.Disable();
+                    bts.Left.Disable();
+                }
+                else
+                {
+                    disabledButtons.AddRange(new [] { PaginationButtonType.SkipLeft, PaginationButtonType.Left});
+                }
+
 
                 if (pages.Count() == 2)
-                    bts.SkipRight.Disable();
+                {
+                    if (disableBehavior == ButtonDisableBehavior.Disable)
+                    {
+                        bts.SkipRight.Disable();
+                    }
+                    else
+                    {
+                        disabledButtons.AddRange(new [] { PaginationButtonType.SkipRight });
+                    }
+
+                }
+
             }
 
             DiscordMessage message;
+            var buttonArray = bts.ButtonArray;
+            if (disabledButtons.Count != 0)
+            {
+                var buttonList = buttonArray.ToList();
+                if (disabledButtons.Contains(PaginationButtonType.Left))
+                {
+                    buttonList.Remove(bts.Left);
+                }
+                if (disabledButtons.Contains(PaginationButtonType.Right))
+                {
+                    buttonList.Remove(bts.Right);
+                }
+                if (disabledButtons.Contains(PaginationButtonType.SkipLeft))
+                {
+                    buttonList.Remove(bts.SkipLeft);
+                }
+                if (disabledButtons.Contains(PaginationButtonType.SkipRight))
+                {
+                    buttonList.Remove(bts.SkipRight);
+                }
+                if (disabledButtons.Contains(PaginationButtonType.Stop))
+                {
+                    buttonList.Remove(bts.Stop);
+                }
+
+                buttonArray = buttonList.ToArray();
+            }
             if (asEditResponse)
             {
                 var builder = new DiscordWebhookBuilder()
                     .WithContent(pages.First().Content)
                     .AddEmbed(pages.First().Embed)
-                    .AddComponents(bts.ButtonArray);
+                    .AddComponents(buttonArray);
 
                 message = await interaction.EditOriginalResponseAsync(builder);
             }
@@ -831,7 +898,7 @@ namespace DSharpPlus.Interactivity
                     .WithContent(pages.First().Content)
                     .AddEmbed(pages.First().Embed)
                     .AsEphemeral(ephemeral)
-                    .AddComponents(bts.ButtonArray);
+                    .AddComponents(buttonArray);
 
                 if (update) {
                     await interaction.CreateResponseAsync(InteractionResponseType.UpdateMessage, builder);
@@ -995,6 +1062,25 @@ namespace DSharpPlus.Interactivity
             };
 
             await at.ConfigureAwait(false);
+        }
+
+        public override void Dispose()
+        {
+            this.ComponentEventWaiter.Dispose();
+            this.ModalEventWaiter.Dispose();
+            this.ReactionCollector.Dispose();
+            this.ComponentInteractionWaiter.Dispose();
+            this.MessageCreatedWaiter.Dispose();
+            this.MessageReactionAddWaiter.Dispose();
+            this.Paginator.Dispose();
+            this.Poller.Dispose();
+            this.TypingStartWaiter.Dispose();
+            this._compPaginator.Dispose();
+        }
+
+        ~InteractivityExtension()
+        {
+            this.Dispose();
         }
     }
 }

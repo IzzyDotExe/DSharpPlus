@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,13 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 
-namespace DSharpPlus.Test
+namespace DSharpPlus.Test;
+
+public class MultiEmbedTest : BaseCommandModule
 {
-    public class MultiEmbedTest : BaseCommandModule
-    {
-        [Command("me")]
-        public Task MultiEmbed(CommandContext ctx)
-            => ctx.RespondAsync(m => m
-                .WithEmbed(new DiscordEmbedBuilder().WithTitle("Test 1"))
-                .WithEmbed(new DiscordEmbedBuilder().WithTitle("Test 2")));
-    }
+    [Command("me")]
+    public Task MultiEmbed(CommandContext ctx)
+        => ctx.RespondAsync(m => m
+            .WithEmbed(new DiscordEmbedBuilder().WithTitle("Test 1"))
+            .WithEmbed(new DiscordEmbedBuilder().WithTitle("Test 2")));
 }

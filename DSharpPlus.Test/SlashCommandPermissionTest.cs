@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 //
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2021 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,14 +23,13 @@
 using System.Threading.Tasks;
 using DSharpPlus.SlashCommands;
 
-namespace DSharpPlus.Test
-{
-    public class SlashCommandPermissionTest : ApplicationCommandModule
-    {
-        [SlashCommand("perms", "Test command for permissions")]
-        [SlashCommandPermissions(Permissions.BanMembers)]
-        public Task PermissionsTest(InteractionContext ctx)
-            => ctx.CreateResponseAsync("You have the Manage Guild permission!");
+namespace DSharpPlus.Test;
 
-    }
+public class SlashCommandPermissionTest : ApplicationCommandModule
+{
+    [SlashCommand("perms", "Test command for permissions")]
+    [SlashCommandPermissions(Permissions.BanMembers)]
+    public Task PermissionsTest(InteractionContext ctx)
+        => ctx.CreateResponseAsync("You have the Manage Guild permission!");
+
 }
