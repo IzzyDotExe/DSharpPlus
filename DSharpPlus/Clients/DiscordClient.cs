@@ -65,6 +65,8 @@ namespace DSharpPlus
         /// </summary>
         public int GatewayVersion { get; internal set; }
 
+        public string ClientVersion { get; set; }
+
         /// <summary>
         /// Gets the gateway session information for this client.
         /// </summary>
