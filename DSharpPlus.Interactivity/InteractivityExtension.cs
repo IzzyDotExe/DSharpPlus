@@ -105,15 +105,15 @@ namespace DSharpPlus.Interactivity
                 throw new ArgumentException("You need to provide at least one emoji for a poll!");
 
             foreach (var em in emojis)
-                await m.CreateReactionAsync(em).ConfigureAwait(false);
+                await m.CreateReactionAsync(em);
 
-            var res = await this.Poller.DoPollAsync(new PollRequest(m, timeout ?? this.Config.Timeout, emojis)).ConfigureAwait(false);
+            var res = await this.Poller.DoPollAsync(new PollRequest(m, timeout ?? this.Config.Timeout, emojis));
 
             var pollbehaviour = behaviour ?? this.Config.PollBehaviour;
-            var thismember = await m.Channel.Guild.GetMemberAsync(this.Client.CurrentUser.Id).ConfigureAwait(false);
+            var thismember = await m.Channel.Guild.GetMemberAsync(this.Client.CurrentUser.Id);
 
             if (pollbehaviour == PollBehaviour.DeleteEmojis && m.Channel.PermissionsFor(thismember).HasPermission(Permissions.ManageMessages))
-                await m.DeleteAllReactionsAsync().ConfigureAwait(false);
+                await m.DeleteAllReactionsAsync();
 
             return new ReadOnlyCollection<PollEmoji>(res.ToList());
         }
@@ -140,7 +140,7 @@ namespace DSharpPlus.Interactivity
 
             var matchRequest = new ModalMatchRequest(modal_id,
                     c => c.Interaction.Data.CustomId == modal_id, cancellation: token);
-            var result = await this.ModalEventWaiter.WaitForMatchAsync(matchRequest).ConfigureAwait(false);
+            var result = await this.ModalEventWaiter.WaitForMatchAsync(matchRequest);
 
             return new(result is null, result);
         }
@@ -170,7 +170,7 @@ namespace DSharpPlus.Interactivity
             var matchRequest = new ModalMatchRequest(modal_id,
                     c => c.Interaction.Data.CustomId == modal_id &&
                     c.Interaction.User.Id == user.Id, cancellation: token);
-            var result = await this.ModalEventWaiter.WaitForMatchAsync(matchRequest).ConfigureAwait(false);
+            var result = await this.ModalEventWaiter.WaitForMatchAsync(matchRequest);
 
             return new(result is null, result);
         }
@@ -215,7 +215,7 @@ namespace DSharpPlus.Interactivity
                 .WaitForMatchAsync(new(message,
                     c =>
                         c.Interaction.Data.ComponentType == ComponentType.Button &&
-                        buttons.Any(b => b.CustomId == c.Id), token)).ConfigureAwait(false);
+                        buttons.Any(b => b.CustomId == c.Id), token));
 
             return new(res is null, res);
         }
@@ -256,7 +256,7 @@ namespace DSharpPlus.Interactivity
                 await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, c => c.Interaction.Data.ComponentType == ComponentType.Button && ids.Contains(c.Id), token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
         }
@@ -296,7 +296,7 @@ namespace DSharpPlus.Interactivity
             var result = await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, (c) => c.Interaction.Data.ComponentType is ComponentType.Button && c.User == user, token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
 
@@ -340,7 +340,7 @@ namespace DSharpPlus.Interactivity
             var result = await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, (c) => c.Interaction.Data.ComponentType is ComponentType.Button && c.Id == id, token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
         }
@@ -374,7 +374,7 @@ namespace DSharpPlus.Interactivity
             var result = await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, c => c.Interaction.Data.ComponentType is ComponentType.Button && predicate(c), token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
         }
@@ -411,7 +411,7 @@ namespace DSharpPlus.Interactivity
             var result = await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, c => this.IsSelect(c.Interaction.Data.ComponentType) && predicate(c), token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
         }
@@ -452,7 +452,7 @@ namespace DSharpPlus.Interactivity
             var result = await this
                 .ComponentEventWaiter
                 .WaitForMatchAsync(new(message, (c) => this.IsSelect(c.Interaction.Data.ComponentType) && c.Id == id, token))
-                .ConfigureAwait(false);
+                ;
 
             return new(result is null, result);
         }
@@ -504,7 +504,7 @@ namespace DSharpPlus.Interactivity
 
             var result = await this
                 .ComponentEventWaiter
-                .WaitForMatchAsync(new(message, (c) => c.Id == id && c.User == user, token)).ConfigureAwait(false);
+                .WaitForMatchAsync(new(message, (c) => c.Id == id && c.User == user, token));
 
             return new(result is null, result);
         }
@@ -522,7 +522,7 @@ namespace DSharpPlus.Interactivity
                 throw new InvalidOperationException("No message intents are enabled.");
 
             var timeout = timeoutoverride ?? this.Config.Timeout;
-            var returns = await this.MessageCreatedWaiter.WaitForMatch(new MatchRequest<MessageCreateEventArgs>(x => predicate(x.Message), timeout)).ConfigureAwait(false);
+            var returns = await this.MessageCreatedWaiter.WaitForMatch(new MatchRequest<MessageCreateEventArgs>(x => predicate(x.Message), timeout));
 
             return new InteractivityResult<DiscordMessage>(returns == null, returns?.Message);
         }
@@ -540,7 +540,7 @@ namespace DSharpPlus.Interactivity
                 throw new InvalidOperationException("No reaction intents are enabled.");
 
             var timeout = timeoutoverride ?? this.Config.Timeout;
-            var returns = await this.MessageReactionAddWaiter.WaitForMatch(new MatchRequest<MessageReactionAddEventArgs>(predicate, timeout)).ConfigureAwait(false);
+            var returns = await this.MessageReactionAddWaiter.WaitForMatch(new MatchRequest<MessageReactionAddEventArgs>(predicate, timeout));
 
             return new InteractivityResult<MessageReactionAddEventArgs>(returns == null, returns);
         }
@@ -555,7 +555,7 @@ namespace DSharpPlus.Interactivity
         /// <returns></returns>
         public async Task<InteractivityResult<MessageReactionAddEventArgs>> WaitForReactionAsync(DiscordMessage message, DiscordUser user,
             TimeSpan? timeoutoverride = null)
-            => await this.WaitForReactionAsync(x => x.User.Id == user.Id && x.Message.Id == message.Id, timeoutoverride).ConfigureAwait(false);
+            => await this.WaitForReactionAsync(x => x.User.Id == user.Id && x.Message.Id == message.Id, timeoutoverride);
 
         /// <summary>
         /// Waits for a specific reaction.
@@ -568,7 +568,7 @@ namespace DSharpPlus.Interactivity
         /// <returns></returns>
         public async Task<InteractivityResult<MessageReactionAddEventArgs>> WaitForReactionAsync(Func<MessageReactionAddEventArgs, bool> predicate,
             DiscordMessage message, DiscordUser user, TimeSpan? timeoutoverride = null)
-            => await this.WaitForReactionAsync(x => predicate(x) && x.User.Id == user.Id && x.Message.Id == message.Id, timeoutoverride).ConfigureAwait(false);
+            => await this.WaitForReactionAsync(x => predicate(x) && x.User.Id == user.Id && x.Message.Id == message.Id, timeoutoverride);
 
         /// <summary>
         /// Waits for a specific reaction.
@@ -580,7 +580,7 @@ namespace DSharpPlus.Interactivity
         /// <returns></returns>
         public async Task<InteractivityResult<MessageReactionAddEventArgs>> WaitForReactionAsync(Func<MessageReactionAddEventArgs, bool> predicate,
             DiscordUser user, TimeSpan? timeoutoverride = null)
-            => await this.WaitForReactionAsync(x => predicate(x) && x.User.Id == user.Id, timeoutoverride).ConfigureAwait(false);
+            => await this.WaitForReactionAsync(x => predicate(x) && x.User.Id == user.Id, timeoutoverride);
 
         /// <summary>
         /// Waits for a user to start typing.
@@ -598,7 +598,7 @@ namespace DSharpPlus.Interactivity
             var timeout = timeoutoverride ?? this.Config.Timeout;
             var returns = await this.TypingStartWaiter.WaitForMatch(
                 new MatchRequest<TypingStartEventArgs>(x => x.User.Id == user.Id && x.Channel.Id == channel.Id, timeout))
-                .ConfigureAwait(false);
+                ;
 
             return new InteractivityResult<TypingStartEventArgs>(returns == null, returns);
         }
@@ -617,7 +617,7 @@ namespace DSharpPlus.Interactivity
             var timeout = timeoutoverride ?? this.Config.Timeout;
             var returns = await this.TypingStartWaiter.WaitForMatch(
                 new MatchRequest<TypingStartEventArgs>(x => x.User.Id == user.Id, timeout))
-                .ConfigureAwait(false);
+                ;
 
             return new InteractivityResult<TypingStartEventArgs>(returns == null, returns);
         }
@@ -636,7 +636,7 @@ namespace DSharpPlus.Interactivity
             var timeout = timeoutoverride ?? this.Config.Timeout;
             var returns = await this.TypingStartWaiter.WaitForMatch(
                 new MatchRequest<TypingStartEventArgs>(x => x.Channel.Id == channel.Id, timeout))
-                .ConfigureAwait(false);
+                ;
 
             return new InteractivityResult<TypingStartEventArgs>(returns == null, returns);
         }
@@ -653,7 +653,7 @@ namespace DSharpPlus.Interactivity
                 throw new InvalidOperationException("No reaction intents are enabled.");
 
             var timeout = timeoutoverride ?? this.Config.Timeout;
-            var collection = await this.ReactionCollector.CollectAsync(new ReactionCollectRequest(m, timeout)).ConfigureAwait(false);
+            var collection = await this.ReactionCollector.CollectAsync(new ReactionCollectRequest(m, timeout));
 
             return collection;
         }
@@ -670,7 +670,7 @@ namespace DSharpPlus.Interactivity
             var timeout = timeoutoverride ?? this.Config.Timeout;
 
             var waiter = new EventWaiter<T>(this.Client);
-            var res = await waiter.WaitForMatch(new MatchRequest<T>(predicate, timeout)).ConfigureAwait(false);
+            var res = await waiter.WaitForMatch(new MatchRequest<T>(predicate, timeout));
             return new InteractivityResult<T>(res == null, res);
         }
 
@@ -679,7 +679,7 @@ namespace DSharpPlus.Interactivity
             var timeout = timeoutoverride ?? this.Config.Timeout;
 
             using var waiter = new EventWaiter<T>(this.Client);
-            var res = await waiter.CollectMatches(new CollectRequest<T>(predicate, timeout)).ConfigureAwait(false);
+            var res = await waiter.CollectMatches(new CollectRequest<T>(predicate, timeout));
             return res;
         }
 
@@ -725,11 +725,11 @@ namespace DSharpPlus.Interactivity
                 .WithEmbed(pages.First().Embed)
                 .AddComponents(bts.ButtonArray);
 
-            var message = await builder.SendAsync(channel).ConfigureAwait(false);
+            var message = await builder.SendAsync(channel);
 
             var req = new ButtonPaginationRequest(message, user, bhv, del, bts, pages.ToArray(), token == default ? this.GetCancellationToken() : token);
 
-            await this._compPaginator.DoPaginationAsync(req).ConfigureAwait(false);
+            await this._compPaginator.DoPaginationAsync(req);
         }
 
         /// <summary>
@@ -774,7 +774,7 @@ namespace DSharpPlus.Interactivity
             var builder = new DiscordMessageBuilder()
                 .WithContent(pages.First().Content)
                 .WithEmbed(pages.First().Embed);
-            var m = await builder.SendAsync(channel).ConfigureAwait(false);
+            var m = await builder.SendAsync(channel);
 
             var timeout = timeoutoverride ?? this.Config.Timeout;
 
@@ -784,7 +784,7 @@ namespace DSharpPlus.Interactivity
 
             var prequest = new PaginationRequest(m, user, bhv, del, ems, timeout, pages.ToArray());
 
-            await this.Paginator.DoPaginationAsync(prequest).ConfigureAwait(false);
+            await this.Paginator.DoPaginationAsync(prequest);
         }
 
         /// <summary>
@@ -921,7 +921,7 @@ namespace DSharpPlus.Interactivity
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public async Task WaitForCustomPaginationAsync(IPaginationRequest request) => await this.Paginator.DoPaginationAsync(request).ConfigureAwait(false);
+        public async Task WaitForCustomPaginationAsync(IPaginationRequest request) => await this.Paginator.DoPaginationAsync(request);
 
         /// <summary>
         /// Waits for custom button-based pagination request to finish.
@@ -929,7 +929,7 @@ namespace DSharpPlus.Interactivity
         /// This does <i><b>not</b></i> invoke <see cref="IPaginationRequest.DoCleanupAsync"/>.
         /// </summary>
         /// <param name="request">The request to wait for.</param>
-        public async Task WaitForCustomComponentPaginationAsync(IPaginationRequest request) => await this._compPaginator.DoPaginationAsync(request).ConfigureAwait(false);
+        public async Task WaitForCustomComponentPaginationAsync(IPaginationRequest request) => await this._compPaginator.DoPaginationAsync(request);
 
         /// <summary>
         /// Generates pages from a string, and puts them in message content.
@@ -1062,7 +1062,7 @@ namespace DSharpPlus.Interactivity
                 _ => throw new ArgumentException("Unknown enum value.")
             };
 
-            await at.ConfigureAwait(false);
+            await at;
         }
 
         public override void Dispose()

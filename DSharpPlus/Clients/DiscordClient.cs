@@ -224,7 +224,10 @@ namespace DSharpPlus
             this._stageInstanceCreated = new AsyncEvent<DiscordClient, StageInstanceCreateEventArgs>("STAGE_INSTANCE_CREATED", this.EventErrorHandler);
             this._stageInstanceUpdated = new AsyncEvent<DiscordClient, StageInstanceUpdateEventArgs>("STAGE_INSTANCE_UPDATED", this.EventErrorHandler);
             this._stageInstanceDeleted = new AsyncEvent<DiscordClient, StageInstanceDeleteEventArgs>("STAGE_INSTANCE_DELETED", this.EventErrorHandler);
-
+            this._autoModerationRuleCreated = new AsyncEvent<DiscordClient, AutoModerationRuleCreateEventArgs>("AUTO_MODERATION_RULE_CREATE", this.EventErrorHandler);
+            this._autoModerationRuleUpdated = new AsyncEvent<DiscordClient, AutoModerationRuleUpdateEventArgs>("AUTO_MODERATION_RULE_UPDATE", this.EventErrorHandler);
+            this._autoModerationRuleDeleted = new AsyncEvent<DiscordClient, AutoModerationRuleDeleteEventArgs>("AUTO_MODERATION_RULE_DELETE", this.EventErrorHandler);
+            this._autoModerationRuleExecuted = new AsyncEvent<DiscordClient, AutoModerationRuleExecuteEventArgs>("AUTO_MODERATION_ACTION_EXECUTION", this.EventErrorHandler);
             #region Threads
             this._threadCreated = new AsyncEvent<DiscordClient, ThreadCreateEventArgs>("THREAD_CREATED", this.EventErrorHandler);
             this._threadUpdated = new AsyncEvent<DiscordClient, ThreadUpdateEventArgs>("THREAD_UPDATED", this.EventErrorHandler);
@@ -311,7 +314,7 @@ namespace DSharpPlus
             {
                 try
                 {
-                    await this.InternalConnectAsync().ConfigureAwait(false);
+                    await this.InternalConnectAsync();
                     s = true;
                     break;
                 }
@@ -338,7 +341,7 @@ namespace DSharpPlus
                     if (i <= 0 && !this.Configuration.ReconnectIndefinitely) break;
 
                     this.Logger.LogError(LoggerEvents.ConnectionFailure, ex, "Connection attempt failed, retrying in {Seconds}s", w / 1000);
-                    await Task.Delay(w).ConfigureAwait(false);
+                    await Task.Delay(w);
 
                     if (i > 0)
                         w *= 2;
@@ -368,7 +371,7 @@ namespace DSharpPlus
         {
             this.Configuration.AutoReconnect = false;
             if (this._webSocketClient != null)
-                await this._webSocketClient.DisconnectAsync().ConfigureAwait(false);
+                await this._webSocketClient.DisconnectAsync();
         }
 
         #endregion
@@ -403,7 +406,7 @@ namespace DSharpPlus
             if (!updateCache && this.TryGetCachedUserInternal(userId, out var usr))
                 return usr;
 
-            usr = await this.ApiClient.GetUserAsync(userId).ConfigureAwait(false);
+            usr = await this.ApiClient.GetUserAsync(userId);
 
             // See BaseDiscordClient.UpdateUser for why this is done like this.
             this.UserCache.AddOrUpdate(userId, usr, (_, _) => usr);
@@ -420,7 +423,7 @@ namespace DSharpPlus
         /// <exception cref="Exceptions.BadRequestException">Thrown when an invalid parameter was provided.</exception>
         /// <exception cref="Exceptions.ServerErrorException">Thrown when Discord is unable to process the request.</exception>
         public async Task<DiscordChannel> GetChannelAsync(ulong id)
-            => this.InternalGetCachedThread(id) ?? this.InternalGetCachedChannel(id) ?? await this.ApiClient.GetChannelAsync(id).ConfigureAwait(false);
+            => this.InternalGetCachedThread(id) ?? this.InternalGetCachedChannel(id) ?? await this.ApiClient.GetChannelAsync(id);
 
         /// <summary>
         /// Sends a message
@@ -556,8 +559,8 @@ namespace DSharpPlus
             if (this._guilds.TryGetValue(id, out var guild) && (!withCounts.HasValue || !withCounts.Value))
                 return guild;
 
-            guild = await this.ApiClient.GetGuildAsync(id, withCounts).ConfigureAwait(false);
-            var channels = await this.ApiClient.GetGuildChannelsAsync(guild.Id).ConfigureAwait(false);
+            guild = await this.ApiClient.GetGuildAsync(id, withCounts);
+            var channels = await this.ApiClient.GetGuildChannelsAsync(guild.Id);
             foreach (var channel in channels) guild._channels[channel.Id] = channel;
 
             return guild;
@@ -647,7 +650,7 @@ namespace DSharpPlus
             else if (avatar.HasValue)
                 av64 = null;
 
-            var usr = await this.ApiClient.ModifyCurrentUserAsync(username, av64).ConfigureAwait(false);
+            var usr = await this.ApiClient.ModifyCurrentUserAsync(username, av64);
 
             this.CurrentUser.Username = usr.Username;
             this.CurrentUser.Discriminator = usr.Discriminator;
@@ -720,8 +723,8 @@ namespace DSharpPlus
         {
             var mdl = new ApplicationCommandEditModel();
             action(mdl);
-            var applicationId = this.CurrentApplication?.Id ?? (await this.GetCurrentApplicationAsync().ConfigureAwait(false)).Id;
-            return await this.ApiClient.EditGlobalApplicationCommandAsync(applicationId, commandId, mdl.Name, mdl.Description, mdl.Options, mdl.DefaultPermission, default, default, mdl.AllowDMUsage, mdl.DefaultMemberPermissions).ConfigureAwait(false);
+            var applicationId = this.CurrentApplication?.Id ?? (await this.GetCurrentApplicationAsync()).Id;
+            return await this.ApiClient.EditGlobalApplicationCommandAsync(applicationId, commandId, mdl.Name, mdl.Description, mdl.Options, mdl.DefaultPermission, mdl.NSFW, default, default, mdl.AllowDMUsage, mdl.DefaultMemberPermissions);
         }
 
         /// <summary>
@@ -777,8 +780,8 @@ namespace DSharpPlus
         {
             var mdl = new ApplicationCommandEditModel();
             action(mdl);
-            var applicationId = this.CurrentApplication?.Id ?? (await this.GetCurrentApplicationAsync().ConfigureAwait(false)).Id;
-            return await this.ApiClient.EditGuildApplicationCommandAsync(applicationId, guildId, commandId, mdl.Name, mdl.Description, mdl.Options, mdl.DefaultPermission, default, default, mdl.AllowDMUsage, mdl.DefaultMemberPermissions).ConfigureAwait(false);
+            var applicationId = this.CurrentApplication?.Id ?? (await this.GetCurrentApplicationAsync()).Id;
+            return await this.ApiClient.EditGuildApplicationCommandAsync(applicationId, guildId, commandId, mdl.Name, mdl.Description, mdl.Options, mdl.DefaultPermission, mdl.NSFW, default, default, mdl.AllowDMUsage, mdl.DefaultMemberPermissions);
         }
 
         /// <summary>
@@ -1050,7 +1053,7 @@ namespace DSharpPlus
             this._disposed = true;
             GC.SuppressFinalize(this);
 
-            this.DisconnectAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            this.DisconnectAsync().GetAwaiter().GetResult();
             this.ApiClient._rest.Dispose();
             this.CurrentUser = null;
 

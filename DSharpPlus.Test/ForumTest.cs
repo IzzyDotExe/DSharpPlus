@@ -1,7 +1,7 @@
 // This file is part of the DSharpPlus project.
 // 
 // Copyright (c) 2015 Mike Santiago
-// Copyright (c) 2016-2022 DSharpPlus Contributors
+// Copyright (c) 2016-2023 DSharpPlus Contributors
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -38,10 +38,10 @@ public class ForumTest : BaseCommandModule
             return;
         }
 
-        var post = new ForumPostBuilder().WithName("D#+ Test!!").WithMessage(new DiscordMessageBuilder().WithContent("Code is working! uwu"));
+        ForumPostBuilder post = new ForumPostBuilder().WithName("D#+ Test!!").WithMessage(new DiscordMessageBuilder().WithContent("Code is working! uwu"));
 
-        var post_ = await fc.CreateForumPostAsync(post);
-        
+        DiscordForumPostStarter post_ = await fc.CreateForumPostAsync(post);
+
         await ctx.RespondAsync($"Created post {post_.Channel.Name} in {fc.Name}.");
     }
 
