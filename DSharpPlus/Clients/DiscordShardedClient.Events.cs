@@ -24,7 +24,6 @@
 using System;
 using System.Threading.Tasks;
 using DSharpPlus.AsyncEvents;
-using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Logging;
 
@@ -830,7 +829,7 @@ namespace DSharpPlus
             where TArgs : AsyncEventArgs
         {
             this.Logger.LogError(LoggerEvents.EventHandlerException, ex, "Event handler exception for event {Event} thrown from {Method} (defined in {DeclaringType})", asyncEvent.Name, handler.Method, handler.Method.DeclaringType);
-            this._clientErrored.InvokeAsync(sender, new ClientErrorEventArgs { EventName = asyncEvent.Name, Exception = ex }).ConfigureAwait(false).GetAwaiter().GetResult();
+            this._clientErrored.InvokeAsync(sender, new ClientErrorEventArgs { EventName = asyncEvent.Name, Exception = ex }).GetAwaiter().GetResult();
         }
 
         private void Goof<TArgs>(AsyncEvent<DiscordClient, TArgs> asyncEvent, Exception ex, AsyncEventHandler<DiscordClient, TArgs> handler, DiscordClient sender, TArgs eventArgs)
@@ -1035,6 +1034,36 @@ namespace DSharpPlus
         private Task Client_ThreadMembersUpdated(DiscordClient client, ThreadMembersUpdateEventArgs e)
             => this._threadMembersUpdated.InvokeAsync(client, e);
 
+        #endregion
+
+        #region AutoModeration
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleCreateEventArgs> AutoModerationRuleCreated
+        {
+            add => this._autoModerationRuleCreated.Register(value);
+            remove => this._autoModerationRuleCreated.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleCreateEventArgs> _autoModerationRuleCreated;
+
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleUpdateEventArgs> AutoModerationRuleUpdated
+        {
+            add => this._autoModerationRuleUpdated.Register(value);
+            remove => this._autoModerationRuleUpdated.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleUpdateEventArgs> _autoModerationRuleUpdated;
+
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleDeleteEventArgs> AutoModerationRuleDeleted
+        {
+            add => this._autoModerationRuleDeleted.Register(value);
+            remove => this._autoModerationRuleDeleted.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleDeleteEventArgs> _autoModerationRuleDeleted;
+
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleExecuteEventArgs> AutoModerationRuleExecuted
+        {
+            add => this._autoModerationRuleExecuted.Register(value);
+            remove => this._autoModerationRuleExecuted.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleExecuteEventArgs> _autoModerationRuleExecuted;
         #endregion
     }
 }

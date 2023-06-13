@@ -910,12 +910,55 @@ namespace DSharpPlus
             where TArgs : AsyncEventArgs
         {
             this.Logger.LogError(LoggerEvents.EventHandlerException, ex, "Event handler exception for event {Event} thrown from {Method} (defined in {DeclaryingType})", asyncEvent.Name, handler.Method, handler.Method.DeclaringType);
-            this._clientErrored.InvokeAsync(this, new ClientErrorEventArgs { EventName = asyncEvent.Name, Exception = ex }).ConfigureAwait(false).GetAwaiter().GetResult();
+            this._clientErrored.InvokeAsync(this, new ClientErrorEventArgs { EventName = asyncEvent.Name, Exception = ex }).GetAwaiter().GetResult();
         }
 
         private void Goof<TSender, TArgs>(AsyncEvent<TSender, TArgs> asyncEvent, Exception ex, AsyncEventHandler<TSender, TArgs> handler, TSender sender, TArgs eventArgs)
             where TArgs : AsyncEventArgs => this.Logger.LogCritical(LoggerEvents.EventHandlerException, ex, "Exception event handler {Method} (defined in {DeclaringType}) threw an exception", handler.Method, handler.Method.DeclaringType);
 
+        #endregion
+
+        #region AutoModeration
+
+        /// <summary>
+        /// Fired when a new auto-moderation rule is created.
+        /// </summary>
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleCreateEventArgs> AutoModerationRuleCreated
+        {
+            add => this._autoModerationRuleCreated.Register(value);
+            remove => this._autoModerationRuleCreated.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleCreateEventArgs> _autoModerationRuleCreated;
+
+        /// <summary>
+        /// Fired when an auto-moderation rule is updated.
+        /// </summary>
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleUpdateEventArgs> AutoModerationRuleUpdated
+        {
+            add => this._autoModerationRuleUpdated.Register(value);
+            remove => this._autoModerationRuleUpdated.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleUpdateEventArgs> _autoModerationRuleUpdated;
+
+        /// <summary>
+        /// Fired when an auto-moderation rule is deleted.
+        /// </summary>
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleDeleteEventArgs> AutoModerationRuleDeleted
+        {
+            add => this._autoModerationRuleDeleted.Register(value);
+            remove => this._autoModerationRuleDeleted.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleDeleteEventArgs> _autoModerationRuleDeleted;
+
+        /// <summary>
+        /// Fired when an auto-moderation is executed.
+        /// </summary>
+        public event AsyncEventHandler<DiscordClient, AutoModerationRuleExecuteEventArgs> AutoModerationRuleExecuted
+        {
+            add => this._autoModerationRuleExecuted.Register(value);
+            remove => this._autoModerationRuleExecuted.Unregister(value);
+        }
+        private AsyncEvent<DiscordClient, AutoModerationRuleExecuteEventArgs> _autoModerationRuleExecuted;
         #endregion
     }
 }
