@@ -20,33 +20,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-using System;
-using System.Threading.Tasks;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.VoiceNext;
 
-namespace DSharpPlus.Test;
+using DSharpPlus.Entities;
 
-public class VoiceNextTest : BaseCommandModule
+namespace DSharpPlus;
+public interface IMessageCacheProvider
 {
-    static VoiceNextTest() => TaskScheduler.UnobservedTaskException += OhNo;
+    /// <summary>
+    /// Add a <see cref="DiscordMessage"/> object to the cache.
+    /// </summary>
+    /// <param name="message">The <see cref="DiscordMessage"/> object to add to the cache.</param>
+    void Add(DiscordMessage message);
 
-    private static void OhNo(object sender, UnobservedTaskExceptionEventArgs e) => Console.Error.WriteLine("SOMETHING WENT TERRIBLY WRONG WHEN DISCONNECTING");
+    /// <summary>
+    /// Remove the <see cref="DiscordMessage"/> object associated with the message ID from the cache. 
+    /// </summary>
+    /// <param name="messageId">The ID of the message to remove from the cache.</param>
+    void Remove(ulong messageId);
 
-    [Command]
-    public async Task JoinAsync(CommandContext ctx)
-    {
-        VoiceNextExtension vnext = ctx.Client.GetVoiceNext();
-        await vnext.ConnectAsync(ctx.Member.VoiceState.Channel);
-    }
-
-    [Command]
-    public static Task Leave(CommandContext ctx)
-    {
-        VoiceNextExtension vnext = ctx.Client.GetVoiceNext();
-
-        vnext.GetConnection(ctx.Guild)?.Disconnect(); // Calls .Dispose(); //
-        return Task.CompletedTask;
-    }
+    /// <summary>
+    /// Try to get a <see cref="DiscordMessage"/> object associated with the message ID from the cache.
+    /// </summary>
+    /// <param name="messageId">The ID of the message to retrieve from the cache.</param>
+    /// <param name="message">The <see cref="DiscordMessage"/> object retrieved from the cache, if it exists; null otherwise.</param>
+    /// <returns><see langword="true"/> if the message can be retrieved from the cache, <see langword="false"/> otherwise.</returns>
+    bool TryGet(ulong messageId, out DiscordMessage? message);
 }

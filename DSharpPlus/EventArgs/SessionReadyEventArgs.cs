@@ -21,12 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace DSharpPlus.Test;
-
-public static class BeeMovie
+namespace DSharpPlus.EventArgs
 {
-    public const string Script =
-        @"Removed because copyright or something but I had the whole bee movie script in here and it worked so just take my word for it";
+    /// <summary>
+    /// Represents arguments for <see cref="DiscordClient.SessionCreated"/> event.
+    /// </summary>
+    public sealed class SessionReadyEventArgs : DiscordEventArgs
+    {
+        internal SessionReadyEventArgs() : base() { }
+    }
 }
-
-// DM me for a paste if you really wanna try it out yourself
